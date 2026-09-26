@@ -1,0 +1,131 @@
+{
+  "version": "1.0.0",
+  "description": "搜索目标注册表（新用户模板）。legal-research 加载时读取此文件决定各检索来源是否可用。新增数据源只需在 search_targets 中添加一项；把某个源的 status 改成 connected 即启用。所有源默认 disconnected——引擎会自动跳过并走降级链，不报错。",
+  "_usage": {
+    "where_to_put": "复制本文件到你的配置目录（默认读取 ~/.workbuddy/config/panshi/search_targets/registry.json，可在 SKILL.md 中改为你的实际路径）",
+    "how_to_enable": "把你已接入的数据源的 status 从 disconnected 改为 connected，并按你的实际环境填 capabilities[].tool 工具名",
+    "if_missing": "本文件不存在时，引擎使用内置的 6 级降级链兜底（本地KB→北大法宝→元典→ima→元宝→WebSearch），可正常研究，只是不感知你已接入哪些源"
+  },
+  "search_targets": {
+    "local_kb": {
+      "name": "本地知识库",
+      "type": "local_script",
+      "status": "disconnected",
+      "capabilities": [
+        {
+          "name": "rag",
+          "description": "本地 RAG 检索（向量+同义词+FTS5 三路召回，带 doc_id 出处）",
+          "tool": "python3 scripts/rag_ask.py \"{query}\" --db tags.db --json",
+          "params": { "query": "检索问题" },
+          "est_tokens": 1500
+        }
+      ],
+      "best_for": ["自办案件", "法院公众号文章", "法条条文组"],
+      "notes": "可选增强。建库方法见 references/local-kb-setup.md；未建库保持 disconnected 即可"
+    },
+    "pkulaw": {
+      "name": "北大法宝",
+      "type": "mcp",
+      "mcp_namespace": "mcp__pkulaw",
+      "status": "disconnected",
+      "capabilities": [
+        {
+          "name": "get_article",
+          "description": "逐条法条原文检索",
+          "tool": "mcp__pkulaw__mcp-law-search-service/get_article",
+          "params": { "title": "法条所属法规名称", "number": "条款号（中文数字）" },
+          "est_tokens": 300
+        },
+        {
+          "name": "search_case",
+          "description": "类案智能检索",
+          "tool": "mcp__pkulaw__mcp-case-search-service/search_case",
+          "params": { "text": "关键词或文本" },
+          "est_tokens": 1500
+        }
+      ],
+      "best_for": ["法条原文", "类案裁判", "法规体系"],
+      "notes": "法律+案例双检。接入北大法宝 MCP 后把 status 改为 connected"
+    },
+    "yuandian": {
+      "name": "元典",
+      "type": "mcp",
+      "mcp_namespace": "mcp__yuandian-mcp",
+      "status": "disconnected",
+      "capabilities": [
+        {
+          "name": "law_search",
+          "description": "法条向量检索",
+          "tool": "mcp__yuandian-mcp__yuandian_law_vector_search",
+          "params": { "query": "检索词" },
+          "est_tokens": 800
+        },
+        {
+          "name": "qwal_search",
+          "description": "权威案例检索（指导/公报/典型）",
+          "tool": "mcp__yuandian-mcp__yuandian_rh_qwal_search",
+          "params": { "keyword": "检索词", "source": "案例级别" },
+          "est_tokens": 1500
+        }
+      ],
+      "best_for": ["法条交叉核验", "权威案例"],
+      "notes": "与北大法宝并列交叉核验。接入元典 MCP 后改为 connected"
+    },
+    "ima": {
+      "name": "IMA知识库",
+      "type": "mcp",
+      "mcp_namespace": "mcp__ima-mcp",
+      "status": "disconnected",
+      "capabilities": [
+        {
+          "name": "search_knowledge",
+          "description": "自有知识库全文检索（仅公众号文章，本地案卷不上传）",
+          "tool": "mcp__ima-mcp__search_knowledge",
+          "params": { "query": "检索关键词" },
+          "est_tokens": 1500
+        }
+      ],
+      "best_for": ["公众号文章"],
+      "notes": "仅用于拉取公众号文章。接入 ima MCP 后改为 connected"
+    },
+    "yuanbao_wsa": {
+      "name": "元宝 WSA 搜索",
+      "type": "skill",
+      "status": "disconnected",
+      "capabilities": [
+        {
+          "name": "search",
+          "description": "元宝联网搜索（AI 去噪，优于通用搜索）",
+          "tool": "web-access",
+          "params": { "query": "检索词" },
+          "est_tokens": 1200
+        }
+      ],
+      "best_for": ["时效性资讯", "AI 去噪搜索"],
+      "notes": "需 web-access skill 可用"
+    },
+    "web_search": {
+      "name": "WebSearch",
+      "type": "builtin",
+      "status": "connected",
+      "capabilities": [
+        {
+          "name": "search",
+          "description": "通用联网搜索（兜底）",
+          "tool": "WebSearch",
+          "params": { "query": "检索词" },
+          "est_tokens": 1000
+        },
+        {
+          "name": "fetch",
+          "description": "抓取网页全文",
+          "tool": "WebFetch",
+          "params": { "url": "网页地址" },
+          "est_tokens": 2000
+        }
+      ],
+      "best_for": ["兜底检索", "公开信息"],
+      "notes": "多数 AI 环境自带，默认 connected 作最后兜底"
+    }
+  }
+}

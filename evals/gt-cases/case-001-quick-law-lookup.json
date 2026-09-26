@@ -1,0 +1,40 @@
+{
+  "case_id": "case-001",
+  "description": "快速法条查询（R1 only）——民法典租赁合同买卖不破租赁条款",
+  "input_prompt": "查一下民法典第725条，买卖不破租赁的规定，给我原文和时效状态",
+  "context": "用户代表出租方立场，需要快速确认法条原文",
+  "split": "dev",
+  "category": "basic",
+  "assertions": [
+    {
+      "type": "contains",
+      "value": ["民法典", "第725条", "买卖不破租赁", "租赁物", "承租人"],
+      "weight": 1
+    },
+    {
+      "type": "contains",
+      "value": ["[法源]"],
+      "weight": 1
+    },
+    {
+      "type": "contains",
+      "value": ["现行有效"],
+      "weight": 2
+    },
+    {
+      "type": "regex",
+      "pattern": "✅|⚠️|❌",
+      "weight": 1
+    },
+    {
+      "type": "no_harm",
+      "forbidden": ["已废止", "已被取代"],
+      "weight": 3
+    },
+    {
+      "type": "format_check",
+      "required_format": "时效|效力|适用性",
+      "weight": 1
+    }
+  ]
+}
