@@ -2,7 +2,7 @@
 name: legal-research
 description: 法律问题研究引擎。遇到任何法律问题先走这里：先检索再回答，标出处，宁缺勿编。用户说「研究一下」「查一下」「查法条」「司法解释」「XX纠纷怎么处理/怎么判/怎么维权」时触发。
 version: "1.0.0-oss"
-license: MIT
+license: CC BY-SA 4.0
 ---
 
 # 法律研究引擎 — 五层递进（开源版）
